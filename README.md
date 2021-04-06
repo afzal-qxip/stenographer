@@ -1,5 +1,4 @@
-Stenographer
-============
+![image](https://user-images.githubusercontent.com/1423657/113742940-67f90080-9703-11eb-9cf7-cc1cffa4b782.png)
 
 Overview
 --------
