@@ -1,0 +1,3 @@
+Tests: run-example
+Depends: @, curl, rsyslog, net-tools, gawk
+Restrictions: isolation-container, needs-root, allow-stderr

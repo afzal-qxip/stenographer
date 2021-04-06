@@ -1,0 +1,61 @@
+Source: stenographer
+Section: net
+Priority: optional
+Maintainer: Hilko Bengen <bengen@debian.org>
+Uploaders: Sascha Steinbiss <satta@debian.org>
+Build-Depends: debhelper-compat (= 13),
+ dh-golang,
+ golang-go,
+ golang-github-golang-leveldb-dev,
+ golang-github-google-gopacket-dev,
+ golang-golang-x-net-dev,
+ golang-google-grpc-dev,
+ golang-github-google-uuid-dev,
+ libaio-dev,
+ libleveldb-dev,
+ libsnappy-dev,
+ libseccomp-dev,
+ txt2man
+Standards-Version: 4.5.0
+Homepage: https://github.com/google/stenographer
+Vcs-Browser: https://salsa.debian.org/go-team/packages/stenographer
+Vcs-Git: https://salsa.debian.org/go-team/packages/stenographer.git
+XS-Go-Import-Path: github.com/google/stenographer
+
+Package: stenographer
+Architecture: amd64 arm64 armel armhf i386 mips mips64el mipsel ppc64el s390x alpha hppa hurd-i386 kfreebsd-amd64 kfreebsd-i386 m68k powerpc powerpcspe sh4 sparc64 x32
+Depends: ${shlibs:Depends}, ${misc:Depends}, stenographer-common, lsb-base (>=3.0-6)
+Recommends: stenographer-client
+Built-Using: ${misc:Built-Using}
+Description: full-packet-capture utility -- server
+ Stenographer is a full-packet-capture utility for buffering packets
+ to disk for intrusion detection and incident response purposes. It
+ provides a high-performance implementation of NIC-to-disk packet
+ writing, handles deleting those files as disk fills up, and provides
+ methods for reading back specific sets of packets quickly and easily.
+
+Package: stenographer-client
+Architecture: all
+Depends: ${misc:Depends}, stenographer-common,
+ curl, jq, tcpdump,
+Description: full-packet-capture utility -- clients
+ Stenographer is a full-packet-capture utility for buffering packets
+ to disk for intrusion detection and incident response purposes. It
+ provides a high-performance implementation of NIC-to-disk packet
+ writing, handles deleting those files as disk fills up, and provides
+ methods for reading back specific sets of packets quickly and easily.
+ .
+ This package contains a HTTP-based client.
+
+Package: stenographer-common
+Architecture: all
+Depends: ${misc:Depends}, adduser, libcap2-bin, openssl, jq
+Description: full-packet-capture utility -- common files
+ Stenographer is a full-packet-capture utility for buffering packets
+ to disk for intrusion detection and incident response purposes. It
+ provides a high-performance implementation of NIC-to-disk packet
+ writing, handles deleting those files as disk fills up, and provides
+ methods for reading back specific sets of packets quickly and easily.
+ .
+ This package contains configuration common to client and server and
+ creates the Unix user and group needed for operation.

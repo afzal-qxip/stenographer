@@ -1,0 +1,17 @@
+NAME
+  stenocurl - curl wrapper to access Stenographer URLs
+
+SYNOPSIS
+  stenocurl /<path> [curl args...]
+
+DESCRIPTION
+  Runs 'curl' against https://stenographerserver/path, returning data on STDOUT.
+  Any arguments after the first are passed directly to 'curl'.
+
+  This script is mostly used to access /debug/XXX URLs for Stenographer... for
+  accessing packets, it's probably better to use the 'stenoread' wrapper around
+  this script, which correctly passes packet requests into steno, then passes
+  the results through tcpdump for easier handling.
+
+OPTIONS
+  This tool forwards its arguments to curl.

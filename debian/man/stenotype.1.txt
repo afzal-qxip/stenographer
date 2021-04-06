@@ -1,0 +1,59 @@
+NAME
+  stenotype - dump raw packets to disk
+
+SYNOPSIS
+  stenotype [-qv?] [--aiops=NUM] [--blocks=NUM] [--count=NUM]
+            [--dir=STRING] [--fanout_id=NUM] [--fanout_type=NUM]
+            [--fileage_sec=NUM] [--filesize_mb=NUM] [--filter=STRING]
+            [--gid=NUM] [--iface=STRING] [--index_nicelevel=NUM] [--no_index]
+            [--no_watchdogs] [--preallocate_file_mb=NUM] [--seccomp=STRING]
+            [--threads=NUM] [--uid=NUM] [--help] [--usage]
+
+DESCRIPTION
+  Stenotype is a mechanism for quickly dumping raw packets to disk. It aims to have a simple interface (no file rotation: that's left as an exercise for the reader) while being very powerful.
+
+  stenotype uses a NIC->disk pipeline specifically designed to provide as fast an output to disk as possible while just using the kernel's built-in mechanisms.
+
+  1. NIC -> RAM: stenotype uses MMAP'd AF_PACKET with 1MB blocks and a high timeout to offload writing packets and deciding their layout to the kernel. The kernel packs all the packets it can into 1MB, then lets the userspace process know there's a block available in the MMAP'd ring buffer. Nicely, it guarantees no overruns (packets crossing the 1MB boundary) and good alignment to memory pages.
+
+  2. RAM -> Disk: Since the kernel already gave us a single 1MB block of packets that's nicely aligned, we can O_DIRECT write it straight to disk. This avoids any additional copying or kernel buffering. To keep sequential reads going strong, we do all disk IO asynchronously via io_submit (which works specifically for O_DIRECT files... joy!). Since the data is being written to disk asynchronously, we use the time it's writing to disk to do our own in-memory processing and indexing.
+
+  There are N (flag-specified) async IO operations available... once we've used up all N, we block on a used one finishing, then reuse it. The whole pipeline consists of:
+
+   - kernel gives userspace a 1MB block of packets
+   - userspace iterates over packets in block, updates any indexes
+   - userspace starts async IO operation to write block to disk
+   - after N async IO operations are submitted, we synchronously wait for the
+     least recent one to finish.
+   - when an async IO operation finishes, we release the 1MB block back to the
+     kernel to write more packets.
+
+OPTIONS
+      --aiops=NUM            Max number of async IO operations
+      --blocks=NUM           Total number of blocks to use, each is 1MB
+      --count=NUM            Total number of packets to read, -1 to read
+                             forever
+      --dir=STRING           Directory to store packet files in
+      --fanout_id=NUM        If fanning out across processes, set this
+      --fanout_type=NUM      TPACKET_V3 fanout type to fanout packets
+      --fileage_sec=NUM      Files older than this many secs are rotated
+      --filesize_mb=NUM      Max file size in MB before file is rotated
+      --filter=STRING        BPF compiled filter used to filter which packets
+                             will be captured. This has to be a compiled BPF in
+                             hexadecimal, which can be obtained from a human
+                             readable filter expression using the provided
+                             compile_bpf.sh script.
+      --gid=NUM              Drop privileges to this group
+      --iface=STRING         Interface to read packets from
+      --index_nicelevel=NUM  Nice level of indexing threads
+      --no_index             Do not compute or write indexes
+      --no_watchdogs         Don't start any watchdogs
+      --preallocate_file_mb=NUM   When creating new files, preallocate to this
+                             many MB
+      -q                     Quiet logging.  Each -q counteracts one -v
+      --seccomp=STRING       Seccomp style, one of 'none', 'trace', 'kill'.
+      --threads=NUM          Number of parallel threads to read packets with
+      --uid=NUM              Drop privileges to this user
+      -v                     Verbose logging, may be given multiple times
+      -?, --help             Give this help list
+      --usage                Give a short usage message

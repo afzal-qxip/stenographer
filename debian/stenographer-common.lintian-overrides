@@ -1,0 +1,2 @@
+# Having this installed is still useful for users
+stenographer-common: package-contains-upstream-installation-documentation usr/share/doc/stenographer-common/INSTALL.md.gz
