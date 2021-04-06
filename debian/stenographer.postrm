@@ -1,0 +1,13 @@
+#!/bin/sh
+
+set -e
+
+STENOTYPE=/usr/sbin/stenotype
+
+if [ "$1" = "purge" ] ; then
+    if dpkg-statoverride --list $STENOTYPE >/dev/null 2>&1 ; then
+        dpkg-statoverride --remove $STENOTYPE
+    fi
+fi
+
+#DEBHELPER#

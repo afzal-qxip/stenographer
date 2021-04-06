@@ -1,0 +1,73 @@
+#!/usr/bin/make -f
+
+include /usr/share/dpkg/pkg-info.mk
+
+#export DH_VERBOSE = 1
+export DEB_BUILD_MAINT_OPTIONS = hardening=+all
+DATE=$(shell date --date=@$(SOURCE_DATE_EPOCH) '+%d %B %Y')
+
+MANPAGES=debian/man/stenocurl.1 \
+         debian/man/stenoread.1 \
+         debian/man/stenographer.1 \
+         debian/man/stenotype.1 \
+         debian/man/stenokeys.1
+
+%:
+	dh $@ --buildsystem=golang --with=golang
+
+%.1: %.1.txt
+	TZ=UTC LC_ALL=C \
+	  txt2man -d "$(DATE)" \
+	  -s 1 -r "stenographer $(DEB_VERSION_UPSTREAM)" \
+	  -t $(shell basename -a -s.1 $@) \
+	  $< > $@
+
+override_dh_auto_build:
+	dh_auto_build
+	dh_auto_build --buildsystem=makefile --sourcedirectory=stenotype
+
+override_dh_auto_test:
+	cp -r testdata /tmp/stenographer-testdata
+	dh_auto_test
+	rm -rf /tmp/stenographer-testdata
+
+override_dh_auto_install:
+	dh_auto_install -- --no-source
+
+override_dh_installdocs:
+	dh_installdocs -pstenographer-common
+
+override_dh_installchangelogs:
+	dh_installchangelogs -pstenographer-common
+
+override_dh_installexamples:
+	dh_installexamples -pstenographer-common
+
+override_dh_dwz:
+	# pass
+
+override_dh_auto_clean:
+	dh_auto_clean
+	dh_auto_clean --buildsystem=makefile --sourcedirectory=stenotype
+	rm -rf $(MANPAGES) stenokeys /tmp/stenographer-testdata
+
+override_dh_installman: $(MANPAGES)
+	dh_installman
+
+override_dh_install-arch:
+	dh_install -X/usr/share/gocode/src
+	mv debian/stenographer/usr/bin debian/stenographer/usr/sbin
+
+override_dh_install-indep:
+	cp stenokeys.sh stenokeys
+	dh_install -X/usr/share/gocode/src
+	install -D -m644 configs/steno.conf \
+		debian/stenographer-common/etc/stenographer/config
+	install -D -m644 configs/limits.conf \
+		debian/stenographer-common/etc/security/limits.d/stenographer.conf
+
+override_dh_installsystemd:
+	# Do not start stenographer by default.
+	# The user should start it only after making sure the configuration is
+	# appropriate for their installation.
+	dh_installsystemd --no-start --no-enable

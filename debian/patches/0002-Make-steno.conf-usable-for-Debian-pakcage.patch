@@ -1,0 +1,28 @@
+From: Hilko Bengen <bengen@debian.org>
+Date: Tue, 11 Aug 2015 00:26:27 +0200
+Subject: Make steno.conf usable for Debian pakcage
+
+---
+ configs/steno.conf | 8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
+
+--- a/configs/steno.conf
++++ b/configs/steno.conf
+@@ -1,13 +1,13 @@
+ {
+   "Threads": [
+-    { "PacketsDirectory": "/path/to/thread0/packets/directory"
+-    , "IndexDirectory": "/path/to/thread0/index/directory"
++    { "PacketsDirectory": "/var/lib/stenographer/thread0/packets"
++    , "IndexDirectory": "/var/lib/stenographer/thread0/index"
+     , "MaxDirectoryFiles": 30000
+     , "DiskFreePercentage": 10
+     }
+   ]
+-  , "StenotypePath": "/usr/bin/stenotype"
+-  , "Interface": "em1"
++  , "StenotypePath": "/usr/sbin/stenotype"
++  , "Interface": "eth0"
+   , "Port": 1234
+   , "Host": "127.0.0.1"
+   , "Flags": []

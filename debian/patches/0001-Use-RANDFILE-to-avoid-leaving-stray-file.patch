@@ -1,0 +1,24 @@
+From: Sascha Steinbiss <satta@debian.org>
+Date: Mon, 23 Jan 2017 23:42:09 +0000
+Subject: Use RANDFILE to avoid leaving stray file
+
+If unconfigured, openssl leaves a /root/.rnd file around after running the
+stenokeys command in the stenographer-common postinst script. This patch
+makes openssl use /dev/urandom as a seed, and also redirects any write to
+this device, avoiding creation of a file.
+---
+ stenokeys.sh | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/stenokeys.sh b/stenokeys.sh
+index 02f9077..efde8eb 100755
+--- a/stenokeys.sh
++++ b/stenokeys.sh
+@@ -26,6 +26,7 @@ set -e
+ USR=$1
+ GRP=$2
+ CONFIG=$(mktemp -t stenossl.XXXXXXXXXXXX)
++export RANDFILE=/dev/urandom
+ 
+ function sslconfig_common {
+ cat <<EOF

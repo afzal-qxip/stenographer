@@ -1,0 +1,26 @@
+version: '2.1'
+
+volumes:
+    steno_data: {}
+
+services:
+  stenographer:
+    image: qxip/stenographer
+    container_name: stenographer
+    network_mode: "host"
+    volumes:
+      - steno_data:/var/lib/stenographer
+    entrypoint: /usr/bin/entrypoint.sh
+    command: --interface enp4s0 --indexbase /var/lib/stenograpapher/i --packetsbase /var/lib/stenographer/p
+    restart: unless-stopped
+    cap_add:
+       - NET_ADMIN
+       - IPC_LOCK  
+    expose:
+      - "1234"
+      - "1235"
+    ports:
+      - "1234:1234"
+      - "1235:1235"
+    labels:
+      org.label-schema.group: "pcap"

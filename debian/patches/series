@@ -1,0 +1,5 @@
+0001-Use-RANDFILE-to-avoid-leaving-stray-file.patch
+0002-Make-steno.conf-usable-for-Debian-pakcage.patch
+0003-Enable-full-hardening.patch
+0004-Fix-spelling.patch
+0005-Fix-unit-tests.patch

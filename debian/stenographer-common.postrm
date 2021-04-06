@@ -1,0 +1,18 @@
+#!/bin/sh
+
+set -e
+
+CERTDIR=/etc/stenographer/certs
+
+if [ "$1" = "purge" ] ; then
+    if dpkg-statoverride --list $CERTDIR >/dev/null 2>&1 ; then
+        dpkg-statoverride --remove $CERTDIR
+    fi
+    echo "Removing certificates ($CERTDIR)"
+    rm -rf $CERTDIR
+
+    rm -rf /var/lib/stenographer
+    deluser  --system stenographer || echo "Could not remove stenographer user."
+fi
+
+#DEBHELPER#

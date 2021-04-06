@@ -1,0 +1,146 @@
+stenographer (1.0.1-1) unstable; urgency=medium
+
+  * New upstream snapshot.
+  * Add watchfile to track tagged upstream releases.
+  * Fix typo in dh_installexamples override.
+  * Update copyright dates in d/copyright.
+
+ -- Sascha Steinbiss <satta@debian.org>  Tue, 08 Sep 2020 23:39:44 +0200
+
+stenographer (0.0~git20200529.0.b049603-1) unstable; urgency=medium
+
+  * New upstream snapshot.
+  * Refresh patches.
+  * Bump debhelper compat level.
+  * Add upstream metadata.
+
+ -- Sascha Steinbiss <satta@debian.org>  Fri, 29 May 2020 20:42:23 +0200
+
+stenographer (0.0~git20200127.0.51c919c-1) unstable; urgency=medium
+
+  * New upstream snapshot.
+
+ -- Sascha Steinbiss <satta@debian.org>  Mon, 27 Apr 2020 16:33:27 +0200
+
+stenographer (0.0~git20190917.0.3545c54-1) unstable; urgency=medium
+
+  * New upstream snapshot.
+  * Use debhelper-compat.
+  * Bump Standards-Version.
+
+ -- Sascha Steinbiss <satta@debian.org>  Wed, 22 Jan 2020 10:21:22 +0100
+
+stenographer (0.0~git20190528.0.6415e2b-1) unstable; urgency=medium
+
+  * New upstream snapshot.
+  * Add new B-D on golang-google-grpc-dev and golang-github-google-uuid-dev.
+
+ -- Sascha Steinbiss <satta@debian.org>  Fri, 16 Aug 2019 13:32:06 +0200
+
+stenographer (0.0~git20180422.0.73ce5dd-1) unstable; urgency=medium
+
+  * New upstream snapshot.
+  * Use debhelper 12.
+  * Bump Standards-Version.
+  * Avoid use of dpkg-parsechangelog.
+  * Provide shared documentation symlinked from stenographer-common.
+  * Remove obsolete lintian overrides and reword renamed ones.
+  * Make unit test more resilient:
+    - Start stenographer with --seccomp=none to address potential
+      crashes on debci VMs.
+
+ -- Sascha Steinbiss <satta@debian.org>  Sun, 10 Feb 2019 11:25:57 +0100
+
+stenographer (0.0~git20161206.0.66a8e7e-10) unstable; urgency=medium
+
+  * Try to make unit test more robust:
+    - Skip test if there is not enough memory available to run stenographer
+      with minimal settings (256 blocks).
+    - Check that port is actually available before trying to stenoread.
+    - Make test more verbose to debug potential causes for problems.
+
+ -- Sascha Steinbiss <satta@debian.org>  Sat, 02 Jun 2018 18:10:00 +0200
+
+stenographer (0.0~git20161206.0.66a8e7e-9) unstable; urgency=medium
+
+  [ Alexandre Viau ]
+  * Point Vcs-* urls to salsa.debian.org.
+
+  [ Sascha Steinbiss ]
+  * Make stenographer binnmu-safe by not using link-doc between
+    arch-dependent and arch-all packages, instead letting each package
+    have their own docs.
+    Closes: #898232
+  * Use debhelper 11.
+  * Use secure format URL in d/copyright.
+  * Bump Standards-Version.
+  * Remove --with=systemd in dh (no longer needed in 11).
+  * Remove obsolete --parallel.
+  * Switch to dh_installsystemd target for initial disabling of
+    service.
+
+ -- Sascha Steinbiss <satta@debian.org>  Tue, 29 May 2018 16:10:47 +0200
+
+stenographer (0.0~git20161206.0.66a8e7e-8) unstable; urgency=medium
+
+  * Team upload.
+  * Set Built-Using
+
+ -- Michael Stapelberg <stapelberg@debian.org>  Mon, 05 Mar 2018 18:21:20 +0100
+
+stenographer (0.0~git20161206.0.66a8e7e-7) unstable; urgency=medium
+
+  * Team upload.
+  * Switch to XS-Go-Import-Path
+
+ -- Michael Stapelberg <stapelberg@debian.org>  Sat, 10 Feb 2018 11:13:22 +0100
+
+stenographer (0.0~git20161206.0.66a8e7e-6) unstable; urgency=medium
+
+  * Fix autopkgtest for the case where there is more than one default route.
+    Thanks to Steve Langasek for the patch from Ubuntu.
+    Closes: #876713
+  * Bump Standards-Version.
+  * Remove obsolete ORed build-dep on dh-systemd.
+
+ -- Sascha Steinbiss <satta@debian.org>  Wed, 18 Oct 2017 22:47:52 +0100
+
+stenographer (0.0~git20161206.0.66a8e7e-5) unstable; urgency=medium
+
+  * Remove ppc64 from list of supported archs.
+    https://lists.alioth.debian.org/pipermail/pkg-go-maintainers/Week-of-Mon-20170123/010368.html
+  * Add net-tools to runtime dependencies, needed for "route" command.
+    Thanks to Gianfranco Costamagna for reporting this.
+    Closes: #856019
+
+ -- Sascha Steinbiss <satta@debian.org>  Mon, 30 Jan 2017 12:18:35 +0100
+
+stenographer (0.0~git20161206.0.66a8e7e-4) unstable; urgency=medium
+
+  * Split dh_install override into arch and indep variants.
+    Closes: #852348
+  * Clean up patches.
+
+ -- Sascha Steinbiss <satta@debian.org>  Mon, 23 Jan 2017 23:34:00 +0000
+
+stenographer (0.0~git20161206.0.66a8e7e-3) unstable; urgency=medium
+
+  * Add missing dependency on jq for stenographer-common.
+    Apparently stenokeys requires it, as noticed by piuparts.
+  * Make stenokeys.sh use /dev/urandom as RANDFILE to avoid
+    creation of /root/.rnd after calling openssl.
+
+ -- Sascha Steinbiss <satta@debian.org>  Sat, 21 Jan 2017 16:10:23 +0000
+
+stenographer (0.0~git20161206.0.66a8e7e-2) unstable; urgency=medium
+
+  * Fix builds on buildds by making sure directories are created.
+
+ -- Sascha Steinbiss <satta@debian.org>  Fri, 20 Jan 2017 17:28:19 +0100
+
+stenographer (0.0~git20161206.0.66a8e7e-1) unstable; urgency=low
+
+  [ Hilko Bengen and Sascha Steinbiss ]
+  * Initial release (Closes: #795101)
+
+ -- Sascha Steinbiss <satta@debian.org>  Mon, 16 Jan 2017 14:37:44 +0100

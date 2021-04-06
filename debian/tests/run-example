@@ -1,0 +1,52 @@
+#!/bin/sh
+# autopkgtest: Basic functionality test for Stenographer
+# Author: Sascha Steinbiss <satta@debian.org>
+set -e
+
+MEM=$(free | grep Mem | awk '{print $4/1024}' | xargs printf "%.*f" 0)
+if [ "350" -gt "$MEM" ]; then
+    echo "Not enough memory to run test ($MEM MB, 350 MB required), skipping"
+    exit 0
+fi
+
+# make sure syslog service is running
+systemctl start rsyslog
+
+# tap Internet-connected interface
+IFACE=$(route -n | egrep '^0.0.0.0' | awk '{print $8; exit}')
+echo "Using interface $IFACE"
+sed -i "s/\"Interface\": \"eth0\"/\"Interface\": \"$IFACE\"/g" /etc/stenographer/config
+
+# tweak settings to be more reasonable with memory for small test case
+sed -i 's/"Flags": \[\]/"Flags": ["--blocks=256", "--seccomp=none"]/g' /etc/stenographer/config
+
+# start stenographer
+systemctl restart stenographer
+
+# show status
+systemctl status stenographer
+
+# check whether stenographer started up
+systemctl is-active stenographer
+
+# generate some traffic by randomly downloading stuff
+curl 'http://www.debian.org' > /dev/null
+
+# we need to wait a bit until packets appear in output, see
+# https://github.com/google/stenographer/blob/master/DESIGN.md#packets-dont-show-up-immediately
+sleep 180
+
+# add client user
+useradd -g users -G stenographer -m testuser
+
+# show status
+systemctl status stenographer
+
+# check if anything is listening on stenographer port 1234
+netstat -tnlp | grep :1234
+
+# query caps
+su testuser -c "stenoread 'after 5m ago'"
+
+# goodbye
+systemctl stop stenographer

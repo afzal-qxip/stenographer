@@ -1,0 +1,24 @@
+#!/bin/sh
+
+set -e
+
+CERTDIR=/etc/stenographer/certs
+
+if [ "$1" = configure ]; then
+    if ! getent passwd stenographer >/dev/null; then
+        adduser \
+            --system --group --no-create-home --home /var/lib/stenographer \
+            stenographer
+    fi
+    if ! dpkg-statoverride --list $CERTDIR >/dev/null 2>&1; then
+        dpkg-statoverride \
+            --quiet --update \
+            --add stenographer stenographer 0750 $CERTDIR
+    fi
+
+    install -d -ostenographer -gstenographer -m750 /var/lib/stenographer
+fi
+
+stenokeys stenographer stenographer
+
+#DEBHELPER#

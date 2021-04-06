@@ -1,0 +1,14 @@
+NAME
+  stenokeys - sets up keys for stenographer client/server auth
+
+SYNOPSIS
+  stenokeys <stenouser> <stenogroup>
+
+DESCRIPTION
+  The stenokeys tool creates the required server and client certificates and
+  keys for authentication of the stenographer client components when
+  communicating with the server.
+
+OPTIONS
+  stenokeys accepts the username and group of the stenographer user to set the
+  appropriate permissions on the created files.

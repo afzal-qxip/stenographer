@@ -1,0 +1,29 @@
+#!/bin/sh
+
+set -e
+
+STENOTYPE=/usr/sbin/stenotype
+
+if [ "$1" = configure ]; then
+    if which setcap > /dev/null; then
+        if setcap 'CAP_NET_RAW,CAP_NET_ADMIN=ep CAP_IPC_LOCK=ep' "$STENOTYPE"; then
+            echo "setcap on $STENOTYPE worked."
+            if ! dpkg-statoverride --list $STENOTYPE >/dev/null 2>&1; then
+                dpkg-statoverride \
+                    --quiet --update \
+                    --add stenographer root 0744 $STENOTYPE
+            fi
+            # twice, since caps seem to be reset after the call above
+            setcap 'CAP_NET_RAW,CAP_NET_ADMIN=ep CAP_IPC_LOCK=ep' "$STENOTYPE"
+        else
+            echo "setcap on $STENOTYPE failed, falling back to setuid."
+            if ! dpkg-statoverride --list $STENOTYPE >/dev/null 2>&1; then
+                dpkg-statoverride \
+                    --quiet --update \
+                    --add root stenographer 4754 $STENOTYPE
+            fi
+        fi
+    fi
+fi
+
+#DEBHELPER#
