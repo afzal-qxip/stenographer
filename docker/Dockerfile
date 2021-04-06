@@ -1,13 +1,20 @@
 FROM ubuntu:18.04 AS build
 RUN apt update && \
-    apt install -y --no-install-recommends libaio-dev libleveldb-dev libsnappy-dev \
-    g++ libcap2-bin libseccomp-dev golang git ca-certificates make sudo
-RUN apt install -y --no-install-recommends jq openssl
-ENV GOPATH=/stenographer
-RUN go get github.com/google/stenographer
+    apt install -y --no-install-recommends libaio-dev libleveldb-dev libsnappy-dev libpcap-dev \
+    g++ libcap2-bin libseccomp-dev git ca-certificates make sudo jq openssl curl wget
+
+RUN wget -P /tmp https://dl.google.com/go/go1.11.5.linux-amd64.tar.gz && \
+    tar -C /usr/local -xzf /tmp/go1.11.5.linux-amd64.tar.gz && \
+    rm /tmp/go1.11.5.linux-amd64.tar.gz
+
+ENV GOPATH /stenographer
+ENV PATH $GOPATH/bin:/usr/local/go/bin:$PATH
+RUN mkdir -p "$GOPATH/src" "$GOPATH/bin" && chmod -R 777 "$GOPATH"
+
+RUN go get github.com/qxip/stenographer
 ENV BINDIR=/opt/stenographer/bin
 RUN mkdir -p ${BINDIR} && \
-    cd /stenographer/src/github.com/google/stenographer && \
+    cd /stenographer/src/github.com/qxip/stenographer && \
     sed -i -e 's|/path/to|/var/lib/stenographer|' configs/steno.conf && \
     ( ./install.sh || true ) && \
     sed -i -e 's/curl /curl -k /' /opt/stenographer/bin/stenocurl
@@ -15,7 +22,7 @@ RUN mkdir -p ${BINDIR} && \
 FROM ubuntu:18.04
 COPY --from=build /opt/stenographer/bin /usr/bin
 COPY --from=build /etc/stenographer /etc/stenographer
-COPY --from=build /stenographer/src/github.com/google/stenographer/stenotype/compile_bpf.sh /usr/bin/
+COPY --from=build /stenographer/src/github.com/qxip/stenographer/stenotype/compile_bpf.sh /usr/bin/
 COPY entrypoint.sh /usr/bin/
 
 RUN adduser --system --no-create-home stenographer && \
