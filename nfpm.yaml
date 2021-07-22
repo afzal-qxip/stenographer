@@ -1,5 +1,6 @@
-# nfpm configuration for stenographer
-# https://github.com/qxip/stenographer
+# nfpm example config file
+#
+# check https://nfpm.goreleaser.com/configuration for detailed usage
 #
 name: "stenographer"
 arch: "amd64"
@@ -13,6 +14,7 @@ provides:
 - stenographer
 recommends:
 - tcpdump
+- jq
 suggests:
 - tshark
 maintainer: "QXIP BV <bot@qxip.net>"
@@ -57,7 +59,8 @@ overrides:
     scripts:
 #      preinstall: ./scripts/preinstall.sh
       postinstall: ./scripts/postinstall.sh
+#      postremove: ./scripts/postremove.sh
   deb:
     scripts:
-#      preinstall: ./scripts/preinstall.sh
       postinstall: ./scripts/postinstall.sh
+#      preremove: ./scripts/preremove.sh

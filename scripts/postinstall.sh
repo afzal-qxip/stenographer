@@ -4,11 +4,11 @@ _scriptDir="/opt/stenographer"
 
 add_accounts () {
 	if ! id stenographer &>/dev/null; then
-		Info "Setting up stenographer user"
+		echo "Setting up stenographer user"
 		sudo adduser --system --no-create-home stenographer
 	fi
 	if ! getent group stenographer &>/dev/null; then
-		Info "Setting up stenographer group"
+		echo "Setting up stenographer group"
 		sudo addgroup --system stenographer
 	fi
 }
@@ -19,7 +19,7 @@ install_certs () {
 install_configs () {
 	cd $_scriptDir
 
-	Info "Setting up stenographer conf directory"
+	echo "Setting up stenographer conf directory"
 	if [ ! -d /etc/stenographer/certs ]; then
 		sudo mkdir -p /etc/stenographer/certs
 		sudo chown -R root:root /etc/stenographer/certs
@@ -32,7 +32,7 @@ install_configs () {
 	sudo chown root:root /etc/stenographer
 
 	if grep -q /path/to /etc/stenographer/config; then
-		echo "Create output directories and update settings in /etc/stenographer/config"
+		echo "WARNING! Create output directories and update settings in /etc/stenographer/config"
 	fi
 }
 
@@ -53,12 +53,12 @@ install_service () {
 	cd $_scriptDir
 
 	if [ ! -f /etc/security/limits.d/stenographer.conf ]; then
-		Info "Setting up stenographer limits"
+		echo "Setting up stenographer limits"
 		sudo cp -v configs/limits.conf /etc/security/limits.d/stenographer.conf
 	fi
 
 	if [ ! -f /etc/systemd/system/stenographer.service ]; then
-		Info "Installing stenographer systemd service"
+		echo "Installing stenographer systemd service"
 		sudo cp -v configs/systemd.conf /etc/systemd/system/stenographer.service
 		sudo chmod 0644 /etc/systemd/system/stenographer.service
 	fi
