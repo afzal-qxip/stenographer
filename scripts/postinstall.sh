@@ -32,6 +32,9 @@ install_configs () {
 	sudo chown root:root /etc/stenographer
 
 	if grep -q /path/to /etc/stenographer/config; then
+		mkdir -p /var/lib/stenographer
+		sudo chown -R stenographer:stenographer /var/lib/stenographer
+		sudo sed -i 's/\/path\/to/\/var\/lib\/stenographer/g' /etc/stenographer/config
 		echo "WARNING! Create output directories and update settings in /etc/stenographer/config"
 	fi
 }
@@ -71,8 +74,8 @@ function SetCapabilities {
 
 add_accounts
 install_configs
-install_certs
 do_permissions
 install_service
+install_certs
 
 echo "stenographer is ready."
