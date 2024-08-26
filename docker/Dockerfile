@@ -11,10 +11,10 @@ ENV GOPATH /stenographer
 ENV PATH $GOPATH/bin:/usr/local/go/bin:$PATH
 RUN mkdir -p "$GOPATH/src" "$GOPATH/bin" && chmod -R 777 "$GOPATH"
 
-RUN go get github.com/qxip/stenographer
+RUN git clone github.com/qxip/stenographer /stenographer/src
 ENV BINDIR=/opt/stenographer/bin
 RUN mkdir -p ${BINDIR} && \
-    cd /stenographer/src/github.com/qxip/stenographer && \
+    cd /stenographer/src && \
     sed -i -e 's|/path/to|/var/lib/stenographer|' configs/steno.conf && \
     ( ./install.sh || true ) && \
     sed -i -e 's/curl /curl -k /' /opt/stenographer/bin/stenocurl
@@ -22,7 +22,7 @@ RUN mkdir -p ${BINDIR} && \
 FROM ubuntu:22.04
 COPY --from=build /opt/stenographer/bin /usr/bin
 COPY --from=build /etc/stenographer /etc/stenographer
-COPY --from=build /stenographer/src/github.com/qxip/stenographer/stenotype/compile_bpf.sh /usr/bin/
+COPY --from=build /stenographer/src/stenotype/compile_bpf.sh /usr/bin/
 COPY entrypoint.sh /usr/bin/
 
 RUN adduser --system --no-create-home stenographer && \
@@ -30,7 +30,7 @@ RUN adduser --system --no-create-home stenographer && \
     mkdir -p /var/lib/stenographer && \
     chown stenographer:stenographer /var/lib/stenographer && \
     apt update && \
-    apt install -y --no-install-recommends libleveldb1v5 libsnappy1v5 libaio1 \
+    apt install -y --no-install-recommends libleveldb1d libsnappy1v5 libaio1 \
     jq tcpdump libcap2-bin curl tshark ca-certificates sudo && \
     setcap 'CAP_NET_RAW+ep CAP_NET_ADMIN+ep CAP_IPC_LOCK+ep' /usr/bin/stenotype && \
     rm -rf /var/lib/apt/lists/*
