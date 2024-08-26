@@ -22,7 +22,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/google/stenographer/base"
+	"github.com/qxip/stenographer/base"
 )
 
 var v = base.V

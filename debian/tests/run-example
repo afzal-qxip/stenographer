@@ -33,7 +33,7 @@ systemctl is-active stenographer
 curl 'http://www.debian.org' > /dev/null
 
 # we need to wait a bit until packets appear in output, see
-# https://github.com/google/stenographer/blob/master/DESIGN.md#packets-dont-show-up-immediately
+# https://github.com/qxip/stenographer/blob/master/DESIGN.md#packets-dont-show-up-immediately
 sleep 180
 
 # add client user

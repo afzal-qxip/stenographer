@@ -20,9 +20,9 @@ import (
 
 	"golang.org/x/net/context"
 
-	"github.com/google/stenographer/base"
-	"github.com/google/stenographer/filecache"
-	"github.com/google/stenographer/query"
+	"github.com/qxip/stenographer/base"
+	"github.com/qxip/stenographer/filecache"
+	"github.com/qxip/stenographer/query"
 )
 
 var ctx = context.Background()

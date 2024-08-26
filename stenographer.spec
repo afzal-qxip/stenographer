@@ -19,7 +19,7 @@ Release:        1.%{builddate}git%{shortcommit0}%{?dist}
 Summary:        A high-speed packet capture solution that provides indexed access
 
 License:        Apache License, 2.0
-URL:            https://github.com/google/stenographer
+URL:            https://github.com/qxip/stenographer
 Source0:        https://github.com/google/%{name}/archive/%{commit0}.tar.gz#/%{name}-%{commit0}.tar.gz
 
 BuildRequires:  libaio-devel, leveldb-devel, snappy-devel, gcc-c++, make

@@ -30,14 +30,14 @@ import (
 	"sync"
 	"time"
 
-	"github.com/google/stenographer/base"
-	"github.com/google/stenographer/blockfile"
-	"github.com/google/stenographer/config"
-	"github.com/google/stenographer/filecache"
-	"github.com/google/stenographer/httputil"
-	"github.com/google/stenographer/indexfile"
-	"github.com/google/stenographer/query"
-	"github.com/google/stenographer/stats"
+	"github.com/qxip/stenographer/base"
+	"github.com/qxip/stenographer/blockfile"
+	"github.com/qxip/stenographer/config"
+	"github.com/qxip/stenographer/filecache"
+	"github.com/qxip/stenographer/httputil"
+	"github.com/qxip/stenographer/indexfile"
+	"github.com/qxip/stenographer/query"
+	"github.com/qxip/stenographer/stats"
 	"golang.org/x/net/context"
 )
 

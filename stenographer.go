@@ -26,10 +26,10 @@ import (
 	"os"
 	"runtime"
 
-	"github.com/google/stenographer/base"
-	"github.com/google/stenographer/config"
-	"github.com/google/stenographer/env"
-        "github.com/google/stenographer/rpc"
+	"github.com/qxip/stenographer/base"
+	"github.com/qxip/stenographer/config"
+	"github.com/qxip/stenographer/env"
+        "github.com/qxip/stenographer/rpc"
 
 	_ "net/http/pprof" // server debugging info in /debug/pprof/*
 )

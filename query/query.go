@@ -26,9 +26,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/google/stenographer/base"
-	"github.com/google/stenographer/indexfile"
-	"github.com/google/stenographer/stats"
+	"github.com/qxip/stenographer/base"
+	"github.com/qxip/stenographer/indexfile"
+	"github.com/qxip/stenographer/stats"
 	"golang.org/x/net/context"
 )
 

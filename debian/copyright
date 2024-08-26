@@ -1,6 +1,6 @@
 Format: https://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
 Upstream-Name: stenographer
-Source: <https://github.com/google/stenographer>
+Source: <https://github.com/qxip/stenographer>
 
 Files: *
 Copyright: 2014-2015 Google Inc.

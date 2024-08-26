@@ -25,8 +25,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/google/stenographer/base"
-	"github.com/google/stenographer/stats"
+	"github.com/qxip/stenographer/base"
+	"github.com/qxip/stenographer/stats"
 )
 
 // Context returns a new context.Content that cancels when the

@@ -17,10 +17,10 @@ Build-Depends: debhelper-compat (= 13),
  libseccomp-dev,
  txt2man
 Standards-Version: 4.5.0
-Homepage: https://github.com/google/stenographer
+Homepage: https://github.com/qxip/stenographer
 Vcs-Browser: https://salsa.debian.org/go-team/packages/stenographer
 Vcs-Git: https://salsa.debian.org/go-team/packages/stenographer.git
-XS-Go-Import-Path: github.com/google/stenographer
+XS-Go-Import-Path: github.com/qxip/stenographer
 
 Package: stenographer
 Architecture: amd64 arm64 armel armhf i386 mips mips64el mipsel ppc64el s390x alpha hppa hurd-i386 kfreebsd-amd64 kfreebsd-i386 m68k powerpc powerpcspe sh4 sparc64 x32

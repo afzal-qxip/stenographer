@@ -19,7 +19,7 @@
 
 [Unit]
 Description=packet capture to disk
-Documentation=https://github.com/google/stenographer https://github.com/google/stenographer/blob/master/DESIGN.md https://github.com/google/stenographer/blob/master/INSTALL.md
+Documentation=https://github.com/qxip/stenographer https://github.com/qxip/stenographer/blob/master/DESIGN.md https://github.com/qxip/stenographer/blob/master/INSTALL.md
 After=network.target
 
 [Service]

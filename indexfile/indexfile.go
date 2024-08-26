@@ -26,9 +26,9 @@ import (
 	"strings"
 
 	"github.com/golang/leveldb/table"
-	"github.com/google/stenographer/base"
-	"github.com/google/stenographer/filecache"
-	"github.com/google/stenographer/stats"
+	"github.com/qxip/stenographer/base"
+	"github.com/qxip/stenographer/filecache"
+	"github.com/qxip/stenographer/stats"
 	"golang.org/x/net/context"
 )
 

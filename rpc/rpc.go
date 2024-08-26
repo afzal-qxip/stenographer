@@ -32,8 +32,8 @@ import (
         "google.golang.org/grpc"
         "google.golang.org/grpc/credentials"
 
-        "github.com/google/stenographer/config"
-        pb "github.com/google/stenographer/protobuf"
+        "github.com/qxip/stenographer/config"
+        pb "github.com/qxip/stenographer/protobuf"
 )
 
 
