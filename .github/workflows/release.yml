@@ -36,14 +36,13 @@ jobs:
       run: |
         go test ./...
         
-#    - name: Integration Test
-#      run: bash integration_test/test.sh
+    - name: Integration Test
+      run: bash integration_test/test.sh
       
     - run: |
-        echo "VERSION=${{  github.ref_name || github.event.inputs.ref_name }}" >> $GITHUB_ENV
+        echo "VERSION=${{ (github.ref_name == 'master' && github.event_name == 'workflow_dispatch') && github.event.inputs.ref_name || github.ref_name }}" >> $GITHUB_ENV
     
     - name: Upload release
-      if: github.event_name != 'pull_request'
       uses: boxpositron/upload-multiple-releases@1.0.7
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -52,13 +51,12 @@ jobs:
             stenographer
             stenoread
         tag_name: ${{ env.VERSION }}
-        release_name: stenographer_${{ env.VERSION }}
+        release_name: ${{ env.VERSION }}
         draft: false
         prerelease: false
         overwrite: true   
         
     - name: Log in to the Container registry
-      if: false
       uses: docker/login-action@v2.0.0
       with:
         registry: ${{ env.REGISTRY }}
@@ -66,7 +64,6 @@ jobs:
         password: ${{ secrets.GITHUB_TOKEN }}
 
     - name: Docker Build and push (server)
-      if: false
       uses: docker/build-push-action@v3.0.0
       with:
         context: ./docker
