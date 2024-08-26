@@ -1,11 +1,11 @@
-FROM ubuntu:18.04 AS build
+FROM ubuntu:22.04 AS build
 RUN apt update && \
     apt install -y --no-install-recommends libaio-dev libleveldb-dev libsnappy-dev libpcap-dev \
     g++ libcap2-bin libseccomp-dev git ca-certificates make sudo jq openssl curl wget
 
-RUN wget -P /tmp https://dl.google.com/go/go1.11.5.linux-amd64.tar.gz && \
-    tar -C /usr/local -xzf /tmp/go1.11.5.linux-amd64.tar.gz && \
-    rm /tmp/go1.11.5.linux-amd64.tar.gz
+RUN wget -P /tmp https://dl.google.com/go/go1.22.5.linux-amd64.tar.gz && \
+    tar -C /usr/local -xzf /tmp/go1.22.5.linux-amd64.tar.gz && \
+    rm /tmp/go1.22.5.linux-amd64.tar.gz
 
 ENV GOPATH /stenographer
 ENV PATH $GOPATH/bin:/usr/local/go/bin:$PATH
@@ -19,7 +19,7 @@ RUN mkdir -p ${BINDIR} && \
     ( ./install.sh || true ) && \
     sed -i -e 's/curl /curl -k /' /opt/stenographer/bin/stenocurl
 
-FROM ubuntu:18.04
+FROM ubuntu:22.04
 COPY --from=build /opt/stenographer/bin /usr/bin
 COPY --from=build /etc/stenographer /etc/stenographer
 COPY --from=build /stenographer/src/github.com/qxip/stenographer/stenotype/compile_bpf.sh /usr/bin/
@@ -35,7 +35,7 @@ RUN adduser --system --no-create-home stenographer && \
     setcap 'CAP_NET_RAW+ep CAP_NET_ADMIN+ep CAP_IPC_LOCK+ep' /usr/bin/stenotype && \
     rm -rf /var/lib/apt/lists/*
 
-RUN curl -fsSL https://deb.nodesource.com/setup_14.x | sudo -E bash - && \
+RUN curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash - && \
     sudo apt-get install -y nodejs && \
     rm -rf /var/lib/apt/lists/* && \
     npm install -g stenoread
