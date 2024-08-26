@@ -11,7 +11,7 @@ ENV GOPATH /stenographer
 ENV PATH $GOPATH/bin:/usr/local/go/bin:$PATH
 RUN mkdir -p "$GOPATH/src" "$GOPATH/bin" && chmod -R 777 "$GOPATH"
 
-RUN git clone github.com/qxip/stenographer /stenographer/src
+RUN git clone https://github.com/QXIP/stenographer /stenographer/src
 ENV BINDIR=/opt/stenographer/bin
 RUN mkdir -p ${BINDIR} && \
     cd /stenographer/src && \
