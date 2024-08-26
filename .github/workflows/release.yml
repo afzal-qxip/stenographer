@@ -19,7 +19,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v4
-    - run: apt update && apt install -y libaio-dev libleveldb-dev libsnappy-dev g++ libcap2-bin libpcap-dev libseccomp-dev jq openssl ca-certificates
+    - run: sudo apt update && sudo apt install -y libaio-dev libleveldb-dev libsnappy-dev g++ libcap2-bin libpcap-dev libseccomp-dev jq openssl ca-certificates
     - name: Set up Go
       uses: actions/setup-go@v3
       with:
