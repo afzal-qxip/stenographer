@@ -19,6 +19,7 @@ import (
 	"container/heap"
 	"flag"
 	"fmt"
+	"github.com/gofiber/fiber/v2"
 	"io"
 	"log"
 	"net/http"
@@ -358,21 +359,23 @@ func ContextDone(ctx context.Context) bool {
 // or Reset (to postpone the inevitable).
 //
 // Usage:
-//   func couldGetStuck() {
-//     defer base.Watchdog(time.Minute * 5, "my description").Stop()
-//     ... do stuff ...
-//   }
+//
+//	func couldGetStuck() {
+//	  defer base.Watchdog(time.Minute * 5, "my description").Stop()
+//	  ... do stuff ...
+//	}
 //
 // Or:
-//   func couldGetStuckOnManyThings(things []thing) {
-//     fido := base.Watchdog(time.Second * 15)
-//     defer fido.Stop()
-//     initialize()  // can take up to 15 secs
-//     for _, thing := range things {
-//       fido.Reset(time.Second * 5)
-//       process(thing)  // can take up to 5 seconds each
-//     }
-//   }
+//
+//	func couldGetStuckOnManyThings(things []thing) {
+//	  fido := base.Watchdog(time.Second * 15)
+//	  defer fido.Stop()
+//	  initialize()  // can take up to 15 secs
+//	  for _, thing := range things {
+//	    fido.Reset(time.Second * 5)
+//	    process(thing)  // can take up to 5 seconds each
+//	  }
+//	}
 func Watchdog(d time.Duration, msg string) *time.Timer {
 	return time.AfterFunc(d, func() {
 		log.Fatalf("watchdog failed: %v", msg)
@@ -409,6 +412,22 @@ func LimitFromHeaders(h http.Header) (a Limit, err error) {
 		}
 	}
 	if limitStr := h.Get("Steno-Limit-Packets"); limitStr != "" {
+		if a.Packets, err = strconv.ParseInt(limitStr, 0, 64); err != nil {
+			return
+		}
+	}
+	return
+}
+
+// LimitFromFiberHeaders extracts limits from the headers of a Fiber context.
+func LimitFromFiberHeaders(c *fiber.Ctx) (a Limit, err error) {
+	// Access headers using c.Get() or c.Request().Header.Get()
+	if limitStr := c.Get("Steno-Limit-Bytes"); limitStr != "" {
+		if a.Bytes, err = strconv.ParseInt(limitStr, 0, 64); err != nil {
+			return
+		}
+	}
+	if limitStr := c.Get("Steno-Limit-Packets"); limitStr != "" {
 		if a.Packets, err = strconv.ParseInt(limitStr, 0, 64); err != nil {
 			return
 		}

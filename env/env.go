@@ -18,12 +18,13 @@
 package env
 
 import (
-	"encoding/json"
+	"bytes"
 	"fmt"
+	"github.com/gofiber/fiber/v2"
+	"github.com/valyala/fasthttp"
 	"io"
 	"io/ioutil"
 	"log"
-	"net/http"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -65,43 +66,96 @@ func (e *Env) Serve() error {
 	if err != nil {
 		return fmt.Errorf("cannot verify client cert: %v", err)
 	}
-	server := &http.Server{
-		Addr:      fmt.Sprintf("%s:%d", e.conf.Host, e.conf.Port),
+	app := fiber.New()
+	app.All("/query", e.handleQuery)
+	app.All("/debug/stats", stats.S)
+	// Create a fasthttp server with Fiber's handler
+	server := &fasthttp.Server{
+		Handler:   app.Handler(),
 		TLSConfig: tlsConfig,
 	}
-	http.HandleFunc("/query", e.handleQuery)
-	http.Handle("/debug/stats", stats.S)
-	return server.ListenAndServeTLS(
-		filepath.Join(e.conf.CertPath, serverCertFilename),
-		filepath.Join(e.conf.CertPath, serverKeyFilename))
+
+	// Add routes
+	//http.HandleFunc("/query", e.handleQuery)
+	//http.Handle("/debug/stats", stats.S)
+	tlsCertPath := filepath.Join(e.conf.CertPath, serverCertFilename)
+	tlsKeyPath := filepath.Join(e.conf.CertPath, serverKeyFilename)
+	// Start the Fiber server with TLS
+	serverAddr := fmt.Sprintf("%s:%d", e.conf.Host, e.conf.Port)
+	if err := server.ListenAndServeTLS(serverAddr, tlsCertPath, tlsKeyPath); err != nil {
+		return fmt.Errorf("server failed: %v", err)
+	}
+	return nil
+	//return app.ListenTLS(serverAddr,
+	//	filepath.Join(e.conf.CertPath, serverCertFilename),
+	//	filepath.Join(e.conf.CertPath, serverKeyFilename))
 }
 
-func (e *Env) handleQuery(w http.ResponseWriter, r *http.Request) {
-	w = httputil.Log(w, r, true)
+func (e *Env) handleQuery(c *fiber.Ctx) error {
+	// Log the request (assuming you have a similar function in your package)
+	w := httputil.LogRequest(c, true)
 	defer log.Print(w)
 
-	limit, err := base.LimitFromHeaders(r.Header)
+	// Parse limit headers
+	limit, err := base.LimitFromFiberHeaders(c)
 	if err != nil {
-		http.Error(w, "Invalid Limit Headers", http.StatusBadRequest)
-		return
+		return fiber.NewError(fiber.StatusBadRequest, "Invalid Limit Headers")
 	}
 
-	queryBytes, err := ioutil.ReadAll(r.Body)
-	if err != nil {
-		http.Error(w, "could not read request body", http.StatusBadRequest)
-		return
-	}
+	// Read the request body
+	queryBytes := c.Body()
 	q, err := query.NewQuery(string(queryBytes))
 	if err != nil {
-		http.Error(w, "could not parse query", http.StatusBadRequest)
-		return
+		return fiber.NewError(fiber.StatusBadRequest, "could not parse query")
 	}
-	ctx := httputil.Context(w, r, time.Minute*15)
-	defer ctx.Cancel()
+
+	// Create a context with a timeout (use fiber.Context's context)
+	ctx, cancel := context.WithTimeout(c.Context(), time.Minute*15)
+	defer cancel()
+
+	// Lookup packets
 	packets := e.Lookup(ctx, q)
-	w.Header().Set("Content-Type", "application/octet-stream")
-	base.PacketsToFile(packets, w, limit)
+
+	// Set response headers and send the response
+	c.Set("Content-Type", "application/octet-stream")
+	var buffer bytes.Buffer
+	err = base.PacketsToFile(packets, &buffer, limit)
+	if err != nil {
+		return fiber.NewError(fiber.StatusInternalServerError, fmt.Sprintf("Failed to write packets: %v", err))
+	}
+	// Write the buffer content to the response
+	return c.Send(buffer.Bytes())
+	//if err := base.PacketsToFile(packets, c, limit); err != nil {
+	//	return fiber.NewError(fiber.StatusInternalServerError, fmt.Sprintf("Failed to write packets: %v", err))
+	//}
 }
+
+//func (e *Env) handleQuery(w http.ResponseWriter, r *http.Request) {
+//	w = httputil.Log(w, r, true)
+//	defer log.Print(w)
+//
+//	limit, err := base.LimitFromHeaders(r.Header)
+//	if err != nil {
+//		http.Error(w, "Invalid Limit Headers", http.StatusBadRequest)
+//		return
+//	}
+//
+//	queryBytes, err := ioutil.ReadAll(r.Body)
+//	if err != nil {
+//		http.Error(w, "could not read request body", http.StatusBadRequest)
+//		return
+//	}
+//	q, err := query.NewQuery(string(queryBytes))
+//	if err != nil {
+//		http.Error(w, "could not parse query", http.StatusBadRequest)
+//		return
+//	}
+//	ctx := httputil.Context(w, r, time.Minute*15)
+//	defer ctx.Cancel()
+//	packets := e.Lookup(ctx, q)
+//	w.Header().Set("Content-Type", "application/octet-stream")
+//	base.PacketsToFile(packets, w, limit)
+//}
 
 // New returns a new Env for use in running Stenotype.
 func New(c config.Config) (_ *Env, returnedErr error) {
@@ -284,15 +338,19 @@ func (d *Env) Lookup(ctx context.Context, q query.Query) *base.PacketChan {
 }
 
 // ExportDebugHandlers exports a few debugging handlers to an HTTP ServeMux.
-func (d *Env) ExportDebugHandlers(mux *http.ServeMux) {
-	mux.HandleFunc("/debug/config", func(w http.ResponseWriter, r *http.Request) {
-		w = httputil.Log(w, r, false)
-		defer log.Print(w)
-		w.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(w).Encode(d.conf)
+func (d *Env) ExportDebugHandlers(app *fiber.App) {
+	app.All("/debug/config", func(c *fiber.Ctx) error {
+		//w = httputil.Log(w, r, false)
+		logInfo := httputil.LogRequest(c, false)
+		defer log.Print(logInfo)
+		c.Set(fiber.HeaderContentType, fiber.MIMEApplicationJSON)
+		//	w.Header().Set("Content-Type", "application/json")
+		// Respond with the config in JSON format
+		return c.JSON(d.conf)
+		//json.NewEncoder(w).Encode(d.conf)
 	})
 	for _, thread := range d.threads {
-		thread.ExportDebugHandlers(mux)
+		thread.ExportDebugHandlers(app)
 	}
 	oldestTimestamp := stats.S.Get("oldest_timestamp")
 	go func() {

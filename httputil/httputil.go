@@ -18,6 +18,7 @@ package httputil
 import (
 	"bytes"
 	"fmt"
+	"github.com/gofiber/fiber/v2"
 	"io"
 	"io/ioutil"
 	"log"
@@ -46,6 +47,13 @@ func Context(w http.ResponseWriter, r *http.Request, timeout time.Duration) base
 	return ctx
 }
 
+type LogStruct struct {
+	start      time.Time
+	body       string
+	err        error
+	statusCode int
+}
+
 type httpLog struct {
 	r      *http.Request
 	w      http.ResponseWriter
@@ -58,11 +66,12 @@ type httpLog struct {
 
 // New returns a new ResponseWriter which provides a nice
 // String() method for easy printing.  The expected usage is:
-//   func (h *myHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-//     w = httputil.Log(w, r, false)
-//     defer log.Print(w)  // Prints out useful information about request AND response
-//     ... do stuff ...
-//   }
+//
+//	func (h *myHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+//	  w = httputil.Log(w, r, false)
+//	  defer log.Print(w)  // Prints out useful information about request AND response
+//	  ... do stuff ...
+//	}
 func Log(w http.ResponseWriter, r *http.Request, logRequestBody bool) http.ResponseWriter {
 	h := &httpLog{w: w, r: r, start: time.Now(), code: http.StatusOK}
 	if logRequestBody {
@@ -73,6 +82,31 @@ func Log(w http.ResponseWriter, r *http.Request, logRequestBody bool) http.Respo
 		h.body = fmt.Sprintf(" RequestBody:%q", buf.String())
 	}
 	return h
+}
+
+// Function to handle logging within a route
+func LogRequest(c *fiber.Ctx, logRequestBody bool) *LogStruct {
+	logInfo := &LogStruct{
+		start:      time.Now(),
+		statusCode: fiber.StatusOK,
+	}
+
+	// Log request body if required
+	if logRequestBody {
+		var buf bytes.Buffer
+		// Read the body into the buffer
+		_, logInfo.err = io.Copy(&buf, c.Request().BodyStream())
+		// Reset the request body stream with the buffered content
+		c.Request().SetBody(buf.Bytes())
+		// Store the body content for logging
+		logInfo.body = fmt.Sprintf(" RequestBody:%q", buf.String())
+	}
+
+	// Log request information
+	log.Printf("Request started at: %v, Method: %s, URL: %s%s",
+		logInfo.start, c.Method(), c.OriginalURL(), logInfo.body)
+
+	return logInfo
 }
 
 // Header implements http.ResponseWriter.

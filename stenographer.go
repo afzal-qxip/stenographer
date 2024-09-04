@@ -22,15 +22,14 @@ import (
 	"io"
 	"log"
 	"log/syslog"
-	"net/http"
 	"os"
 	"runtime"
 
+	"github.com/gofiber/fiber/v2"
 	"github.com/qxip/stenographer/base"
 	"github.com/qxip/stenographer/config"
 	"github.com/qxip/stenographer/env"
-        "github.com/qxip/stenographer/rpc"
-
+	"github.com/qxip/stenographer/rpc"
 	_ "net/http/pprof" // server debugging info in /debug/pprof/*
 )
 
@@ -83,10 +82,10 @@ func main() {
 	defer env.Close()
 
 	go env.RunStenotype()
-        if conf.Rpc != nil {
-                go rpc.RunStenorpc(conf.Rpc)
-        }
-
-	env.ExportDebugHandlers(http.DefaultServeMux)
+	if conf.Rpc != nil {
+		go rpc.RunStenorpc(conf.Rpc)
+	}
+	app := fiber.New()
+	env.ExportDebugHandlers(app)
 	log.Fatal(env.Serve())
 }

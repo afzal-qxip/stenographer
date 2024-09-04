@@ -16,13 +16,14 @@
 package thread
 
 import (
+	"bytes"
 	"encoding/binary"
 	"encoding/hex"
 	"fmt"
+	"github.com/gofiber/fiber/v2"
 	"io/ioutil"
 	"log"
 	"math/rand"
-	"net/http"
 	"os"
 	"path/filepath"
 	"sort"
@@ -374,105 +375,224 @@ func (t *Thread) SyncFiles() {
 
 // ExportDebugHandlers exports a set of HTTP handlers on /debug/t<thread id> for
 // querying internal state from this thread.
-func (t *Thread) ExportDebugHandlers(mux *http.ServeMux) {
+//
+//	func (t *Thread) ExportDebugHandlers(mux *http.ServeMux) {
+//		prefix := fmt.Sprintf("/debug/t%d", t.id)
+//		mux.HandleFunc(prefix+"/files", func(w http.ResponseWriter, r *http.Request) {
+//			w = httputil.Log(w, r, false)
+//			defer log.Print(w)
+//			w.Header().Set("Content-Type", "text/plain")
+//			fmt.Fprintf(w, "Thread %d (IDX: %q, PKT: %q)\n", t.id, t.indexPath, t.packetPath)
+//			t.mu.RLock()
+//			for name := range t.files {
+//				fmt.Fprintf(w, "\t%v\n", name)
+//			}
+//			t.mu.RUnlock()
+//		})
+//		mux.HandleFunc(prefix+"/index", func(w http.ResponseWriter, r *http.Request) {
+//			w = httputil.Log(w, r, false)
+//			defer log.Print(w)
+//			t.mu.RLock()
+//			defer t.mu.RUnlock()
+//			vals := r.URL.Query()
+//			file := t.files[vals.Get("name")]
+//			if file == nil {
+//				http.Error(w, "file not found", http.StatusNotFound)
+//				return
+//			}
+//			var start, finish []byte
+//			var err error
+//			if s := vals.Get("start"); s != "" {
+//				start, err = hex.DecodeString(s)
+//				if err != nil {
+//					http.Error(w, "bad start", http.StatusBadRequest)
+//					return
+//				}
+//			}
+//			if f := vals.Get("finish"); f != "" {
+//				finish, err = hex.DecodeString(f)
+//				if err != nil {
+//					http.Error(w, "bad finish", http.StatusBadRequest)
+//					return
+//				}
+//			}
+//			w.Header().Set("Content-Type", "text/plain")
+//			file.DumpIndex(w, start, finish)
+//		})
+//		mux.HandleFunc(prefix+"/packets", func(w http.ResponseWriter, r *http.Request) {
+//			w = httputil.Log(w, r, false)
+//			defer log.Print(w)
+//			limit, err := base.LimitFromHeaders(r.Header)
+//			if err != nil {
+//				http.Error(w, "Bad limit headers", http.StatusBadRequest)
+//				return
+//			}
+//			t.mu.RLock()
+//			defer t.mu.RUnlock()
+//			vals := r.URL.Query()
+//			file := t.files[vals.Get("name")]
+//			if file == nil {
+//				http.Error(w, "file not found", http.StatusNotFound)
+//				return
+//			}
+//			w.Header().Set("Content-Type", "application/octet-stream")
+//			base.PacketsToFile(file.AllPackets(), w, limit)
+//		})
+//		mux.HandleFunc(prefix+"/positions", func(w http.ResponseWriter, r *http.Request) {
+//			w = httputil.Log(w, r, true)
+//			defer log.Print(w)
+//			t.mu.RLock()
+//			defer t.mu.RUnlock()
+//			vals := r.URL.Query()
+//			file := t.files[vals.Get("name")]
+//			if file == nil {
+//				http.Error(w, "file not found", http.StatusNotFound)
+//				return
+//			}
+//			queryBytes, err := ioutil.ReadAll(r.Body)
+//			if err != nil {
+//				http.Error(w, "could not read request body", http.StatusBadRequest)
+//				return
+//			}
+//			queryStr := string(queryBytes)
+//			q, err := query.NewQuery(queryStr)
+//			if err != nil {
+//				http.Error(w, "could not parse query", http.StatusBadRequest)
+//				return
+//			}
+//			w.Header().Set("Content-Type", "text/plain")
+//			positions, err := file.Positions(context.Background(), q)
+//			if err != nil {
+//				fmt.Fprintf(w, "ERROR: %v", err)
+//				return
+//			}
+//			fmt.Fprintf(w, "POSITIONS:\n")
+//			if positions.IsAllPositions() {
+//				fmt.Fprintf(w, "\tALL")
+//			} else {
+//				var buf [4]byte
+//				for _, pos := range positions {
+//					binary.BigEndian.PutUint32(buf[:], uint32(pos))
+//					fmt.Fprintf(w, "\t%v\n", hex.EncodeToString(buf[:]))
+//				}
+//			}
+//		})
+//	}
+//
+// ExportDebugHandlers exports a set of HTTP handlers on /debug/t<thread id> for
+// querying internal state from this thread.
+func (t *Thread) ExportDebugHandlers(app *fiber.App) {
 	prefix := fmt.Sprintf("/debug/t%d", t.id)
-	mux.HandleFunc(prefix+"/files", func(w http.ResponseWriter, r *http.Request) {
-		w = httputil.Log(w, r, false)
-		defer log.Print(w)
-		w.Header().Set("Content-Type", "text/plain")
-		fmt.Fprintf(w, "Thread %d (IDX: %q, PKT: %q)\n", t.id, t.indexPath, t.packetPath)
+	app.All(prefix+"/files", func(c *fiber.Ctx) error {
+		//w = httputil.Log(w, r, false)
+
+		LogInfo := httputil.LogRequest(c, false)
+		defer log.Print(LogInfo)
+		//w.Header().Set("Content-Type", "text/plain")
+		var response string
+		response += fmt.Sprintf("Thread %d (IDX: %q, PKT: %q)\n", t.id, t.indexPath, t.packetPath)
+		c.Set("Content-Type", "text/plain")
 		t.mu.RLock()
 		for name := range t.files {
-			fmt.Fprintf(w, "\t%v\n", name)
+			response += fmt.Sprintf("\t%v\n", name)
 		}
 		t.mu.RUnlock()
+		return c.SendString(response)
+
 	})
-	mux.HandleFunc(prefix+"/index", func(w http.ResponseWriter, r *http.Request) {
-		w = httputil.Log(w, r, false)
-		defer log.Print(w)
+	app.All(prefix+"/index", func(c *fiber.Ctx) error {
+		logInfo := httputil.LogRequest(c, false)
+		defer log.Print(logInfo)
+
 		t.mu.RLock()
 		defer t.mu.RUnlock()
-		vals := r.URL.Query()
-		file := t.files[vals.Get("name")]
+
+		name := c.Query("name")
+		file := t.files[name]
 		if file == nil {
-			http.Error(w, "file not found", http.StatusNotFound)
-			return
+			return c.Status(fiber.StatusNotFound).SendString("file not found")
 		}
+
 		var start, finish []byte
 		var err error
-		if s := vals.Get("start"); s != "" {
+		if s := c.Query("start"); s != "" {
 			start, err = hex.DecodeString(s)
 			if err != nil {
-				http.Error(w, "bad start", http.StatusBadRequest)
-				return
+				return c.Status(fiber.StatusBadRequest).SendString("bad start")
 			}
 		}
-		if f := vals.Get("finish"); f != "" {
+		if f := c.Query("finish"); f != "" {
 			finish, err = hex.DecodeString(f)
 			if err != nil {
-				http.Error(w, "bad finish", http.StatusBadRequest)
-				return
+				return c.Status(fiber.StatusBadRequest).SendString("bad finish")
 			}
 		}
-		w.Header().Set("Content-Type", "text/plain")
-		file.DumpIndex(w, start, finish)
+
+		c.Set("Content-Type", "text/plain")
+		var result bytes.Buffer
+		file.DumpIndex(&result, start, finish)
+		return c.Send(result.Bytes())
 	})
-	mux.HandleFunc(prefix+"/packets", func(w http.ResponseWriter, r *http.Request) {
-		w = httputil.Log(w, r, false)
-		defer log.Print(w)
-		limit, err := base.LimitFromHeaders(r.Header)
+	app.All(prefix+"/packets", func(c *fiber.Ctx) error {
+		logInfo := httputil.LogRequest(c, false)
+		defer log.Print(logInfo)
+		limit, err := base.LimitFromFiberHeaders(c)
 		if err != nil {
-			http.Error(w, "Bad limit headers", http.StatusBadRequest)
-			return
+			return c.Status(fiber.StatusBadRequest).SendString("Bad limit headers")
 		}
+
 		t.mu.RLock()
 		defer t.mu.RUnlock()
-		vals := r.URL.Query()
-		file := t.files[vals.Get("name")]
+
+		name := c.Query("name")
+		file := t.files[name]
 		if file == nil {
-			http.Error(w, "file not found", http.StatusNotFound)
-			return
+			return c.Status(fiber.StatusNotFound).SendString("file not found")
 		}
-		w.Header().Set("Content-Type", "application/octet-stream")
-		base.PacketsToFile(file.AllPackets(), w, limit)
+
+		c.Set("Content-Type", "application/octet-stream")
+		var result bytes.Buffer
+		base.PacketsToFile(file.AllPackets(), &result, limit)
+		return c.Send(result.Bytes())
 	})
-	mux.HandleFunc(prefix+"/positions", func(w http.ResponseWriter, r *http.Request) {
-		w = httputil.Log(w, r, true)
-		defer log.Print(w)
+	app.All(prefix+"/positions", func(c *fiber.Ctx) error {
+		logInfo := httputil.LogRequest(c, true)
+		defer log.Print(logInfo)
+
 		t.mu.RLock()
 		defer t.mu.RUnlock()
-		vals := r.URL.Query()
-		file := t.files[vals.Get("name")]
+
+		name := c.Query("name")
+		file := t.files[name]
 		if file == nil {
-			http.Error(w, "file not found", http.StatusNotFound)
-			return
+			return c.Status(fiber.StatusNotFound).SendString("file not found")
 		}
-		queryBytes, err := ioutil.ReadAll(r.Body)
-		if err != nil {
-			http.Error(w, "could not read request body", http.StatusBadRequest)
-			return
-		}
+		queryBytes := c.Body()
+
 		queryStr := string(queryBytes)
 		q, err := query.NewQuery(queryStr)
 		if err != nil {
-			http.Error(w, "could not parse query", http.StatusBadRequest)
-			return
+			return c.Status(fiber.StatusBadRequest).SendString("could not parse query")
 		}
-		w.Header().Set("Content-Type", "text/plain")
+
+		var result bytes.Buffer
 		positions, err := file.Positions(context.Background(), q)
 		if err != nil {
-			fmt.Fprintf(w, "ERROR: %v", err)
-			return
+			fmt.Fprintf(&result, "ERROR: %v", err)
+			return c.Send(result.Bytes())
 		}
-		fmt.Fprintf(w, "POSITIONS:\n")
+
+		fmt.Fprintf(&result, "POSITIONS:\n")
 		if positions.IsAllPositions() {
-			fmt.Fprintf(w, "\tALL")
+			fmt.Fprintf(&result, "\tALL")
 		} else {
 			var buf [4]byte
 			for _, pos := range positions {
 				binary.BigEndian.PutUint32(buf[:], uint32(pos))
-				fmt.Fprintf(w, "\t%v\n", hex.EncodeToString(buf[:]))
+				fmt.Fprintf(&result, "\t%v\n", hex.EncodeToString(buf[:]))
 			}
 		}
+		c.Set("Content-Type", "text/plain")
+		return c.Send(result.Bytes())
 	})
 }
